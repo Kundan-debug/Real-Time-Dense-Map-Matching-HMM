@@ -13,7 +13,6 @@ OUTPUT_FILE = Path("data/candidates.csv")
 TRIP_ID = sys.argv[1] if len(sys.argv) > 1 else "20080404_071650"
 RADIUS_M = 50
 
-
 # Load GPS data
 df = pd.read_csv(GPS_FILE)
 
@@ -25,13 +24,11 @@ df["timestamp"] = pd.to_datetime(df["timestamp"])
 
 print(f"GPS points: {len(df)}")
 
-
 # Load road network
 G = ox.load_graphml(GRAPH_FILE)
 
 print(f"Road nodes: {len(G.nodes)}")
 print(f"Road edges: {len(G.edges)}")
-
 
 # Project road network
 G_projected = ox.project_graph(G)
@@ -44,14 +41,12 @@ nodes, edges = ox.graph_to_gdfs(
 
 print(f"Projected CRS: {edges.crs}")
 
-
 # Coordinate transformation
 transformer = Transformer.from_crs(
     "EPSG:4326",
     edges.crs,
     always_xy=True
 )
-
 
 # Generate candidates
 candidate_rows = []
@@ -92,7 +87,6 @@ for gps_idx, row in df.iterrows():
             "distance_m": distance
         })
 
-
 candidates = pd.DataFrame(candidate_rows)
 
 candidates = candidates.sort_values(
@@ -103,7 +97,6 @@ candidates.to_csv(
     OUTPUT_FILE,
     index=False
 )
-
 
 print("\nCandidate generation complete.")
 print(f"Total candidate rows: {len(candidates)}")
