@@ -7,10 +7,8 @@ EMISSION_FILE = Path("data/emissions.csv")
 TRANSITION_FILE = Path("data/transitions.csv")
 OUTPUT_FILE = Path("data/viterbi_result.csv")
 
-
 # Small value to avoid log(0)
 EPS = 1e-12
-
 
 # Load data
 emissions = pd.read_csv(EMISSION_FILE)
@@ -20,12 +18,10 @@ emissions["timestamp"] = pd.to_datetime(
     emissions["timestamp"]
 )
 
-
 # Unique GPS observations
 gps_indices = sorted(
     emissions["gps_index"].unique()
 )
-
 
 # Create a unique state identifier
 def state_id(row):
@@ -35,12 +31,10 @@ def state_id(row):
         int(row["edge_key"])
     )
 
-
 emissions["state"] = emissions.apply(
     state_id,
     axis=1
 )
-
 
 # Group emission states by GPS observation
 emission_groups = {
@@ -48,7 +42,6 @@ emission_groups = {
     for gps_index, group
     in emissions.groupby("gps_index")
 }
-
 
 # Transition lookup:
 # (previous_state, current_state) -> score
@@ -73,15 +66,11 @@ for _, row in transitions.iterrows():
          previous_state, current_state)
     ] = row["transition_score"]
 
-
 # Viterbi dynamic programming tables
 viterbi = {}
 backpointer = {}
 
-
-# -----------------------------
 # Initialization
-# -----------------------------
 
 first_gps = gps_indices[0]
 
@@ -104,10 +93,7 @@ for _, row in emission_groups[first_gps].iterrows():
         (first_gps, state)
     ] = None
 
-
-# -----------------------------
 # Recursion
-# -----------------------------
 
 for position in range(1, len(gps_indices)):
 
@@ -184,10 +170,7 @@ for position in range(1, len(gps_indices)):
             (current_gps, current_state)
         ] = best_previous_state
 
-
-# -----------------------------
 # Backtracking
-# -----------------------------
 
 last_gps = gps_indices[-1]
 
@@ -216,10 +199,7 @@ for gps_index in reversed(gps_indices):
 
 best_path.reverse()
 
-
-# -----------------------------
 # Create result
-# -----------------------------
 
 results = []
 
@@ -245,14 +225,12 @@ for gps_index, state in best_path:
         "emission_score": match["emission_score"]
     })
 
-
 result = pd.DataFrame(results)
 
 result.to_csv(
     OUTPUT_FILE,
     index=False
 )
-
 
 print("Viterbi map matching complete.")
 print(f"GPS observations: {len(gps_indices)}")
