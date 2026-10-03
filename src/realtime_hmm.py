@@ -3,12 +3,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 EMISSION_FILE = Path("data/emissions.csv")
 TRANSITION_FILE = Path("data/transitions.csv")
 
 EPS = 1e-12
-
 
 def create_state(row):
     return (
@@ -16,7 +14,6 @@ def create_state(row):
         int(row["edge_v"]),
         int(row["edge_key"]),
     )
-
 
 def run_viterbi(emissions, transitions):
     """Run Viterbi over the supplied observation window."""
@@ -291,4 +288,3 @@ def run_realtime_hmm(emissions, transitions, window_size=30, buffer_size=0):
     )
 
     return result
-
