@@ -161,19 +161,26 @@ The generated figures are available in the `results/` directory:
 
 ```text
 Real-Time-Dense-Map-Matching-HMM/
-├── data/
 ├── results/
+│   ├── buffer_experiment.csv
+│   ├── buffer_experiment_trip2.csv
+│   ├── combined_delay_vs_distance.png
+│   ├── delay_vs_10m_accuracy.png
+│   ├── delay_vs_distance.png
+│   ├── final_experiment_summary.csv
+│   ├── taxi_trajectories.csv
+│   └── trajectory_summary.csv
 ├── src/
-│   ├── extract_taxi_data.py
-│   ├── find_taxi_trajectories.py
-│   ├── inspect_dataset.py
 │   ├── add_motion_features.py
-│   ├── download_road_network.py
-│   ├── generate_candidates.py
 │   ├── calculate_emissions.py
 │   ├── calculate_transitions.py
-│   ├── viterbi.py
-│   └── realtime_hmm.py
-├── requirements.txt
+│   ├── download_road_network.py
+│   ├── extract_taxi_data.py
+│   ├── find_taxi_trajectories.py
+│   ├── generate_candidates.py
+│   ├── inspect_dataset.py
+│   ├── realtime_hmm.py
+│   └── viterbi.py
+├── .gitignore
 ├── README.md
-└── .gitignore
+└── requirements.txt
