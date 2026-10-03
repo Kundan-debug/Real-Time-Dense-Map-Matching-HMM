@@ -16,10 +16,8 @@ MAX_NETWORK_DISTANCE = 1000.0
 # Controls how strongly distance mismatch is penalized.
 DISTANCE_SIGMA = 50.0
 
-
 def get_edge_start_end(edge):
     return edge[0], edge[1]
-
 
 # Load candidate states
 candidates = pd.read_csv(CANDIDATE_FILE)
@@ -34,7 +32,6 @@ G = ox.load_graphml(GRAPH_FILE)
 # Make sure edge lengths are numeric
 for u, v, key, data in G.edges(keys=True, data=True):
     data["length"] = float(data.get("length", 0))
-
 
 # Group candidates by GPS observation
 candidate_groups = {
