@@ -6,7 +6,6 @@ DATA_DIR = Path("data/Geolife Trajectories 1.3/Data/010")
 LABEL_FILE = DATA_DIR / "labels.txt"
 OUTPUT_FILE = Path("data/taxi_gps.csv")
 
-
 # Read transportation labels
 labels = pd.read_csv(
     LABEL_FILE,
@@ -24,7 +23,6 @@ taxi_labels = labels[
 ].copy()
 
 print(f"Taxi intervals found: {len(taxi_labels)}")
-
 
 # Read trajectory files
 trajectory_files = sorted(
@@ -107,7 +105,6 @@ for file_path in trajectory_files:
 
     except Exception as e:
         print(f"Could not process {file_path}: {e}")
-
 
 # Combine all taxi points
 if not all_taxi_points:
