@@ -8,7 +8,6 @@ OUTPUT_FILE = Path("data/taxi_gps_features.csv")
 
 EARTH_RADIUS_M = 6_371_000
 
-
 def haversine_distance(lat1, lon1, lat2, lon2):
     lat1 = np.radians(lat1)
     lat2 = np.radians(lat2)
@@ -21,7 +20,6 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     )
 
     return 2 * EARTH_RADIUS_M * np.arcsin(np.sqrt(a))
-
 
 def calculate_bearing(lat1, lon1, lat2, lon2):
     lat1 = np.radians(lat1)
@@ -38,7 +36,6 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
     bearing = np.degrees(np.arctan2(x, y))
 
     return (bearing + 360) % 360
-
 
 df = pd.read_csv(INPUT_FILE)
 
