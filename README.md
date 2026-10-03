@@ -9,153 +9,204 @@
 
 This project implements a real-time dense GPS map-matching system using a Hidden Markov Model (HMM) and the Viterbi algorithm.
 
-The system takes noisy GPS trajectories and matches each GPS observation to a candidate road segment from an OpenStreetMap road network. A buffered real-time version is also implemented to study the trade-off between output delay and map-matching quality.
+The system maps noisy GPS observations to likely road segments using OpenStreetMap (OSM) road data. It uses GPS-to-road distance and heading information for emission probabilities, while transition probabilities consider road-network connectivity, travel distance, and backtracking.
+
+A buffered real-time inference approach is used to study the trade-off between output delay and map-matching distance.
 
 ## Problem Statement
 
-GPS observations from mobile devices can contain positional noise and may not lie exactly on the road network. The objective is to determine the most likely road segment corresponding to each GPS observation while supporting real-time operation.
+GPS observations collected from mobile devices can contain noise and positional errors. Map matching is the process of associating these noisy GPS observations with the most likely road segments on a road network.
 
-The project investigates how introducing a short output buffer affects the GPS-to-matched-road distance.
+The objective of this project is to develop a real-time HMM-based map-matching system that can process dense GPS trajectories and study how a small output buffer affects map-matching performance.
 
 ## Dataset
 
-The project uses the Microsoft GeoLife GPS Trajectory Dataset 1.3.
+The project uses the **Microsoft GeoLife GPS Trajectory Dataset**.
 
-The experiment uses taxi-mode trajectories from user 010. Two dense 1 Hz trajectories were selected:
+The dataset contains GPS trajectories collected from mobile devices. A subset of taxi trajectories is extracted and used for the experiments.
 
-- `20080404_043128` — 1,925 GPS observations
-- `20080404_071650` — 2,167 GPS observations
+The selected trajectories contain dense GPS observations, making them suitable for studying real-time map matching.
 
-The dataset does not provide ground-truth road-segment labels. Therefore, evaluation is based on GPS-to-matched-road distance rather than true road-level accuracy.
+## Approach
 
-## Methodology
+The overall workflow is:
 
-The processing pipeline is:
+1. Extract taxi trajectories from the GeoLife dataset.
+2. Calculate GPS motion features such as speed and heading.
+3. Download the corresponding OpenStreetMap road network.
+4. Generate candidate road segments around each GPS observation.
+5. Calculate emission scores using:
+   - GPS-to-road distance
+   - GPS heading versus road heading
+6. Calculate transition scores using:
+   - Road-network distance
+   - GPS displacement
+   - Road connectivity
+   - Backtracking penalty
+7. Apply the Viterbi algorithm to find the most likely sequence of road segments.
+8. Perform buffered real-time inference using different output delays.
+9. Compare the resulting map-matching distance and percentage of observations within 10 metres of the selected road.
 
-GPS trajectories  
-↓  
-Motion feature extraction  
-↓  
-OpenStreetMap road network  
-↓  
-Candidate road generation  
-↓  
-Emission scoring  
-↓  
-Transition scoring  
-↓  
-Viterbi map matching  
-↓  
-Real-time buffered HMM  
-↓  
-Delay vs. distance evaluation
+## Setup
 
-### 1. Motion Features
+### 1. Clone the repository
 
-For consecutive GPS observations, the system calculates:
+```bash
+git clone https://github.com/Kundan-debug/Real-Time-Dense-Map-Matching-HMM.git
+cd Real-Time-Dense-Map-Matching-HMM
+```
 
-- Distance travelled
-- Speed
-- Heading
-- Time difference
+### 2. Create a virtual environment
 
-Large time gaps are handled separately to avoid treating missing intervals as continuous motion.
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
 
-### 2. Candidate Generation
+### 3. Install dependencies
 
-For every GPS observation, road segments within a 50 metre radius are considered candidate states.
+```bash
+pip install -r requirements.txt
+```
 
-The road network is obtained from OpenStreetMap using OSMnx.
+## Dataset Setup
 
-### 3. Emission Model
+Download the **Microsoft GeoLife GPS Trajectory Dataset** and extract it into the `data/` directory.
 
-Each candidate road segment receives an emission score based on:
+The expected directory structure is:
 
-- Distance between the GPS point and the road segment
-- Difference between GPS heading and road-segment heading
+```text
+data/
+└── Geolife Trajectories 1.3/
+```
 
-Gaussian scoring functions are used for these features.
+The raw dataset is not included in this repository because of its size.
 
-The combined emission score is:
+## Running the Project
 
-`distance_score × heading_score`
+Run the scripts in the following order.
 
-### 4. Transition Model
+### 1. Inspect the dataset
 
-Transitions between consecutive candidate road segments are scored using:
+```bash
+python src/inspect_dataset.py
+```
 
-- Estimated road-network distance
-- GPS displacement
-- Distance discrepancy
-- Same-edge movement
-- Directly connected edges
-- Reverse/backtracking transitions
+### 2. Extract taxi trajectories
 
-A lower penalty is assigned to transitions that represent backtracking.
+```bash
+python src/extract_taxi_data.py
+```
 
-### 5. Viterbi Algorithm
+### 3. Add motion features
 
-The Viterbi algorithm finds the highest-scoring sequence of road-segment states over the GPS observations.
+```bash
+python src/add_motion_features.py
+```
 
-The implementation uses log-space dynamic programming to avoid numerical underflow.
+### 4. Download the road network
 
-### 6. Real-Time Buffered HMM
+```bash
+python src/download_road_network.py
+```
 
-A sliding Viterbi window of 30 observations is used.
+### 5. Generate road candidates
 
-The real-time implementation introduces output buffers of:
+For the primary trajectory:
 
-- 0 seconds
-- 5 seconds
-- 10 seconds
-- 15 seconds
-- 20 seconds
+```bash
+python src/generate_candidates.py 20080404_043128
+```
 
-A buffer delays the commitment of a matched state so that future GPS observations can be incorporated into the decision.
+### 6. Calculate emission scores
 
-## Experimental Results
+```bash
+python src/calculate_emissions.py
+```
 
-### Trajectory 1
+### 7. Calculate transition scores
 
-Trajectory `20080404_043128` contains 1,925 observations.
+```bash
+python src/calculate_transitions.py
+```
 
-| Buffer | Mean Distance (m) | Median Distance (m) | Within 10 m |
-|---:|---:|---:|---:|
-| 0 s | 3.524 | 2.586 | 97.14% |
-| 5 s | 3.507 | 2.588 | 97.30% |
-| 10 s | 3.507 | 2.588 | 97.30% |
-| 15 s | 3.507 | 2.588 | 97.30% |
-| 20 s | 3.507 | 2.588 | 97.30% |
+### 8. Run Viterbi map matching
 
-### Trajectory 2
+```bash
+python src/viterbi.py
+```
 
-Trajectory `20080404_071650` contains 2,167 observations.
+### 9. Run real-time HMM experiments
 
-| Buffer | Mean Distance (m) | Median Distance (m) | Within 10 m |
-|---:|---:|---:|---:|
-| 0 s | 5.450 | 3.816 | 83.80% |
-| 5 s | 5.383 | 3.779 | 84.45% |
-| 10 s | 5.384 | 3.779 | 84.45% |
-| 15 s | 5.384 | 3.779 | 84.45% |
-| 20 s | 5.384 | 3.779 | 84.45% |
+```bash
+python src/realtime_hmm.py
+```
 
-All tested configurations achieved 100% observation coverage after the final-buffer flush.
+The generated experiment results and plots are stored in the `results/` directory.
 
-### Observations
+## Results
 
-Across both trajectories, introducing a 5-second buffer produced a small reduction in mean GPS-to-matched-road distance.
+The experiments evaluate the effect of different output buffer sizes on map-matching performance.
 
-Increasing the buffer beyond 5 seconds produced little additional change in the tested trajectories.
+The tested buffer sizes are:
 
-The second trajectory produced larger distances than the first, indicating that the same HMM configuration behaves differently across trajectories.
+```text
+0, 5, 10, 15, 20 seconds
+```
 
-## Results Figures
+The main evaluation measures are:
 
-The generated figures are available in the `results/` directory:
+- Mean GPS-to-matched-road distance
+- Median GPS-to-matched-road distance
+- Percentage of observations within 10 metres of the matched road
+- Percentage of observations within 20 metres of the matched road
+- Observation coverage
 
-- `delay_vs_distance.png`
-- `combined_delay_vs_distance.png`
-- `delay_vs_10m_accuracy.png`
+The generated result files include:
+
+The generated result files include:
+
+```text
+results/
+├── buffer_experiment.csv
+├── buffer_experiment_trip2.csv
+├── combined_delay_vs_distance.png
+├── delay_vs_10m_accuracy.png
+├── delay_vs_distance.png
+├── final_experiment_summary.csv
+├── taxi_trajectories.csv
+└── trajectory_summary.csv
+```
+
+The experiments showed a small improvement when introducing a short output buffer, while increasing the buffer beyond approximately 5 seconds produced little additional change for the tested trajectories.
+
+## Conclusion
+
+The project demonstrates a real-time GPS map-matching approach based on a Hidden Markov Model and Viterbi decoding.
+
+The results show that buffered inference can provide a small improvement in map-matching distance for the tested trajectories. However, the effect of buffering varies between trajectories, indicating that trajectory characteristics can influence the performance of the same HMM configuration.
+
+## Limitations
+
+The GeoLife dataset used in this project does not provide ground-truth road-segment labels for the selected trajectories. Therefore, the evaluation uses GPS-to-selected-road distance as a map-matching distance metric rather than claiming true road-level accuracy.
+
+The implementation is also a simplified adaptation of the reference HMM approach. The current system uses hand-designed Gaussian scoring functions rather than the learned SVM weights described in the reference paper.
+
+## Requirements
+
+The main Python dependencies are listed in `requirements.txt`:
+
+```text
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+seaborn
+osmnx
+pyproj
+shapely
+```
 
 ## Project Structure
 
@@ -184,3 +235,4 @@ Real-Time-Dense-Map-Matching-HMM/
 ├── .gitignore
 ├── README.md
 └── requirements.txt
+```
