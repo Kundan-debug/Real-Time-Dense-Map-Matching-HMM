@@ -5,7 +5,6 @@ import osmnx as ox
 import pandas as pd
 from pyproj import Transformer
 
-
 CANDIDATE_FILE = Path("data/candidates.csv")
 GRAPH_FILE = Path("data/road_network.graphml")
 OUTPUT_FILE = Path("data/emissions.csv")
@@ -14,7 +13,6 @@ OUTPUT_FILE = Path("data/emissions.csv")
 DISTANCE_SIGMA = 20.0
 HEADING_SIGMA = 45.0
 
-
 def angle_difference(a, b):
     """
     Smallest absolute difference between two angles.
@@ -22,7 +20,6 @@ def angle_difference(a, b):
     """
     diff = abs(a - b) % 360
     return min(diff, 360 - diff)
-
 
 def bearing_from_points(x1, y1, x2, y2):
     """
@@ -36,7 +33,6 @@ def bearing_from_points(x1, y1, x2, y2):
     )
 
     return (angle + 360) % 360
-
 
 # Load candidates
 candidates = pd.read_csv(CANDIDATE_FILE)
@@ -84,7 +80,6 @@ for (u, v, key), edge in edges.iterrows():
 
     except Exception:
         road_headings[(u, v, key)] = np.nan
-
 
 # Calculate emission features
 results = []
@@ -152,7 +147,6 @@ for _, row in candidates.iterrows():
         "heading_score": heading_score,
         "emission_score": emission_score
     })
-
 
 emissions = pd.DataFrame(results)
 
